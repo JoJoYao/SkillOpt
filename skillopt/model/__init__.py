@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from skillopt.model import cli_backend as _cli
 from skillopt.model import azure_openai as _openai
 from skillopt.model import claude_backend as _claude
 from skillopt.model import minimax_backend as _minimax
@@ -31,6 +32,10 @@ def set_backend(name: str | None) -> str:
     mapping it onto the split optimizer/target backend model.
     """
     normalized = str(name or "azure_openai").strip().lower()
+    if normalized in {"cli", "cli_chat", "agy", "claude_cli"}:
+        set_optimizer_backend("cli_chat")
+        set_target_backend("cli_chat")
+        return "cli_chat"
     if normalized in {"azure_openai", "openai_chat", "azure", "azure-openai"}:
         set_optimizer_backend("openai_chat")
         set_target_backend("openai_chat")
@@ -86,6 +91,10 @@ def chat_optimizer(
     reasoning_effort: str | None = None,
     timeout: int | None = None,
 ) -> tuple[str, dict]:
+    if get_optimizer_backend() == "cli_chat":
+        return _cli.chat_optimizer(
+            system=kwargs.get('system'), user=kwargs.get('user')
+        )
     if get_optimizer_backend() == "claude_chat":
         return _claude.chat_optimizer(
             system=system,
@@ -125,6 +134,10 @@ def chat_target(
     reasoning_effort: str | None = None,
     timeout: int | None = None,
 ) -> tuple[str, dict]:
+    if get_target_backend() == "cli_chat":
+        return _cli.chat_target(
+            system=kwargs.get('system'), user=kwargs.get('user')
+        )
     if get_target_backend() == "claude_chat":
         return _claude.chat_target(
             system=system,
